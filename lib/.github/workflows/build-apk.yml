@@ -29,7 +29,11 @@ jobs:
         with:
           channel: stable
           cache: true
-
+      - name: Generate Android project files
+        run: |
+          flutter create --platforms=android --project-name rafiq_student /tmp/rafiq_app
+          cp -r /tmp/rafiq_app/android ./android
+          cp /tmp/rafiq_app/analysis_options.yaml ./analysis_options.yaml
       - name: Get dependencies
         run: flutter pub get
 

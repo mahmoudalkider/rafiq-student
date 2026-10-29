@@ -1,0 +1,65 @@
+
+name: Build Rafiq Student APK
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Verify Flutter installation
+        run: flutter --version
+
+      - name: Check required files
+        run: |
+          test -f pubspec.yaml
+          test -f lib/main.dart
+
+      - name: Generate Android platform
+        run: |
+          flutter create --platforms=android --project-name rafiq_student /tmp/rafiq_app
+          cp -r /tmp/rafiq_app/android ./android
+          cp /tmp/rafiq_app/analysis_options.yaml ./analysis_options.yaml
+
+      - name: Get Flutter dependencies
+        run: flutter pub get
+
+      - name: Analyze Dart code
+        run: flutter analyze --no-pub
+
+      - name: Build release APK
+        run: flutter build apk --release
+
+      - name: Upload APK
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rafiq-student-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+          retention-days: 7
